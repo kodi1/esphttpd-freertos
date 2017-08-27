@@ -17,7 +17,7 @@ FLAVOR = debug
 
 BOOT=new
 APP ?=1
-SPI_SPEED=40
+SPI_SPEED=80
 SPI_MODE=QIO
 SPI_SIZE_MAP=4
 
@@ -53,7 +53,9 @@ endif # } PDIR
 
 LDDIR = $(SDK_PATH)/ld
 
-CCFLAGS += -Os -DOTA_FLASH_SIZE_K=1024
+CCFLAGS += -Os
+CCFLAGS += -DOTA_FLASH_SIZE_K=1024
+CCFLAGS += -DDEBUG_MSG
 
 TARGET_LDFLAGS =		\
 	-nostdlib		\
@@ -111,6 +113,7 @@ LINKFLAGS_eagle.app.v6 = \
 	-L./libesphttpd \
 	-lesphttpd \
 	-lwebpages-espfs \
+	-lpwm \
 	$(DEP_LIBS_eagle.app.v6)					\
 	-Wl,--end-group \
 	-Wl,-Map=mapfile.txt

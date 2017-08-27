@@ -25,6 +25,7 @@ some pictures of cats.
 #include "captdns.h"
 #include "webpages-espfs.h"
 #include "cgiwebsocket.h"
+#include "led_pwm.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -173,12 +174,11 @@ void user_init(void) {
 
 	espFsInit((void*)(webpages_espfs_start));
 	httpdInit(builtInUrls, 80);
-
 /*
 	os_timer_disarm(&websockTimer);
 	os_timer_setfn(&websockTimer, websockTimerCb, NULL);
 	os_timer_arm(&websockTimer, 1000, 1);
 */
-
+    led_pwm_init(0);
 	printf("\nReady\n");
 }
