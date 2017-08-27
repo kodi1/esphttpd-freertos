@@ -44,7 +44,8 @@ GEN_IMAGES= eagle.app.v6.out
 GEN_BINS= eagle.app.v6.bin
 SPECIAL_MKTARGETS=$(APP_MKTARGETS)
 SUBDIRS=    \
-	user
+	user \
+	drv
 
 endif # } PDIR
 
@@ -88,7 +89,8 @@ blankflash:
 																0x00000 "$(SDK_PATH)/bin/boot_v1.4(b1).bin" \
 																0x1000 $(BIN_PATH)/upgrade/$(BIN_NAME).bin
 COMPONENTS_eagle.app.v6 = \
-	user/libuser.a
+	user/libuser.a \
+	drv/libdrv.a
 
 LINKFLAGS_eagle.app.v6 = \
 	-L$(SDK_PATH)/lib        \
@@ -164,7 +166,7 @@ DDEFINES +=				\
 # Required for each makefile to inherit from the parent
 #
 
-INCLUDES := $(INCLUDES) -I $(PDIR)include -I $(PDIR)libesphttpd/include -I $(PDIR)libesphttpd/espfs
+INCLUDES := $(INCLUDES) -I $(PDIR)include -I $(PDIR)libesphttpd/include -I $(PDIR)libesphttpd/espfs -I $(PDIR)/drv
 sinclude $(SDK_PATH)/Makefile
 
 .PHONY: FORCE
