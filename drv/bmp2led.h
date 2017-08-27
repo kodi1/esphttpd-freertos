@@ -23,13 +23,23 @@
 #define RGB_BMP_W   (32)
 #define RGB_BMP_H   (8)
 
-#define MAX_BMP2LED_DATA    (2)
+#define MAX_BMP2LED_DATA    (4)
 #define BMP2LED_WAIT_TIME   (20)    // milliseconds
-#define BMP2LED_POWER_DOWN  (600)   // seconds
+#define BMP2LED_POWER_DOWN  (6)   // seconds
 #define _IDLE_CNT           ((BMP2LED_POWER_DOWN * 1000) / BMP2LED_WAIT_TIME)
 #define _ms(a)              ((a) / portTICK_RATE_MS)
 
 void ICACHE_FLASH_ATTR init_rgb2led_exec();
 int ICACHE_FLASH_ATTR cgi_bmp2led(HttpdConnData *connData);
+
+typedef enum {
+    BMP_DATA,
+    RAW_DATA,
+} data_type_t;
+
+typedef struct {
+    data_type_t type;
+    void        *data;
+} data_pixel_t;
 
 #endif /* DRV_BMP2LED_H_ */
