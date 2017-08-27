@@ -161,10 +161,7 @@ if __name__ == '__main__':
                 sys.exit()
 
     js['cmd_id'] = 2
-    try:
-        print send_cmd(js)
-    except:
-        pass
+    print send_cmd(js)
     js['cmd_id'] = 4
     print send_cmd(js)
 
@@ -181,9 +178,9 @@ if __name__ == '__main__':
                 print send_cmd(js)
             else:
                 led = {
-                        'r' : {'min': 0, 'max': 900, 'current': 0, 'step': 10, 't': 0.01},
-                        'g' : {'min': 0, 'max': 900, 'current': 0, 'step': 10, 't': 0.01},
-                        'b' : {'min': 0, 'max': 900, 'current': 0, 'step': 10, 't': 0.01},
+                        'r' : {'min': 0, 'max': 900, 'current': 0, 'step': 10, 't': 0.05},
+                        'g' : {'min': 0, 'max': 900, 'current': 0, 'step': 10, 't': 0.05},
+                        'b' : {'min': 0, 'max': 900, 'current': 0, 'step': 10, 't': 0.05},
                         }
                 while True:
                     #r = random.randint(led['r']['min'], led['r']['max'])

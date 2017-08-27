@@ -32,6 +32,19 @@ some pictures of cats.
 #include "freertos/semphr.h"
 #include "freertos/queue.h"
 
+#include "led_exec.h"
+
+#ifdef  USE_UDP_CTRL
+#define LED_INIT() do {init_listen(6666);} while(0);
+#endif
+
+#ifdef  USE_HTTP_CTRL
+#define LED_INIT() do {init_led_exec();} while(0);
+#endif
+
+#ifndef LED_INIT
+#error "LED_INIT()"
+#endif
 
 //Function that tells the authentication system what users/passwords live on the system.
 //This is disabled in the default build; if you want to try it, enable the authBasic line in
@@ -156,6 +169,9 @@ HttpdBuiltInUrl builtInUrls[]={
 	{"/websocket/ws.cgi", cgiWebsocket, myWebsocketConnect},
 	{"/websocket/echo.cgi", cgiWebsocket, myEchoWebsocketConnect},
 
+#ifdef  USE_HTTP_CTRL
+    {"/rgb", cgi_rgb, NULL},
+#endif
 	{"*", cgiEspFsHook, NULL}, //Catch-all cgi function for the filesystem
 	{NULL, NULL, NULL}
 };
@@ -179,6 +195,7 @@ void user_init(void) {
 	os_timer_setfn(&websockTimer, websockTimerCb, NULL);
 	os_timer_arm(&websockTimer, 1000, 1);
 */
-    init_listen(6666);
+	LED_INIT();
+
 	printf("\nReady\n");
 }

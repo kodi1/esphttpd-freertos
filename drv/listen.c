@@ -13,6 +13,7 @@
 #include "freertos/queue.h"
 #include "lwip/lwip/sockets.h"
 #include "json/cJSON.h"
+#include "led_exec.h"
 
 static char rx_buff[MAX_DATA_SIZE];
 static char *id2str[] = {
@@ -304,8 +305,6 @@ static void ICACHE_FLASH_ATTR listen_task (void *arg)
 xTaskHandle ICACHE_FLASH_ATTR init_listen(uint16 port) {
     xTaskHandle hndl;
     static struct create_params c;
-
-    led_pwm_init(0);
 
     c.port = port;
 
