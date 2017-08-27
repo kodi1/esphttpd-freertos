@@ -36,23 +36,31 @@ some pictures of cats.
 #include "bmp2led.h"
 
 #ifdef USE_UDP_CTRL
-#define _INIT() do {init_listen(6666);} while(0);
+#define _INIT(a) do {ret = 0; init_listen(6666);} while(0);
 #endif
 
 #ifdef USE_HTTP_CTRL
-#define _INIT() do {init_led_exec();} while(0);
+#define _INIT(a) do {ret = 0; init_led_exec();} while(0);
 #endif
 
 #ifdef USE_RGB_PIXEL
-#define _INIT() do {init_rgb2led_exec();} while(0);
+#define _INIT(a) do {ret = 0; init_rgb2led_exec();} while(0);
 #endif
 
-#ifdef USE_SENSORS
-#define _DEV_NAME "sensor"
-#define _INIT(a,b) do {init_sensors(a,b);} while (0);
-#else
+#ifdef USE_SENSOR_DHT22
+#define _DEV_NAME "dht22"
+#define _INIT(a) do {ret = init_sensor_dht22(a);} while (0);
+#endif
+
+#ifdef USE_SENSOR_BME280
+#define _DEV_NAME "bme280"
+#define _INIT(a) do {ret = init_sensor_bme280(a);} while (0);
+#endif
+
+#if (!defined USE_SENSOR_BME280 && !defined USE_SENSOR_DHT22)
 #define _DEV_NAME "led"
 #endif
+
 #ifndef _INIT
 #error "_INIT()"
 #endif
@@ -223,6 +231,7 @@ uint32 user_rf_cal_sector_set(void)
 
 //Main routine. Initialize stdout, the I/O, filesystem and the webserver and we're done.
 void user_init(void) {
+    uint32 ret = 0;
     uint8  r[6];
     static uint8_t hostname[16];
 	uart_div_modify(0, UART_CLK_FREQ / 115200);
@@ -231,18 +240,20 @@ void user_init(void) {
 	snprintf(hostname, sizeof(hostname), "%s_%x%x%x", _DEV_NAME , r[3], r[4], r[5]);
 	wifi_station_set_hostname(hostname);
 
-#ifndef USE_SENSORS
-	ioInit();
-	captdnsInit();
-	espFsInit((void*)(webpages_espfs_start));
-	httpdInit(builtInUrls, 80);
-#endif
+    _INIT(hostname);
+
+    if (!ret) {
+        ioInit();
+        captdnsInit();
+        espFsInit((void*)(webpages_espfs_start));
+        httpdInit(builtInUrls, 80);
+    }
 
 /*
 	os_timer_disarm(&websockTimer);
 	os_timer_setfn(&websockTimer, websockTimerCb, NULL);
 	os_timer_arm(&websockTimer, 1000, 1);
 */
-	_INIT(builtInUrls, hostname);
+
 	printf("\nReady\n");
 }
