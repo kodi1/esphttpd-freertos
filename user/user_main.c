@@ -33,6 +33,7 @@ some pictures of cats.
 #include "freertos/queue.h"
 
 #include "led_exec.h"
+#include "bmp2led.h"
 
 #ifdef  USE_UDP_CTRL
 #define LED_INIT() do {init_listen(6666);} while(0);
@@ -40,6 +41,10 @@ some pictures of cats.
 
 #ifdef  USE_HTTP_CTRL
 #define LED_INIT() do {init_led_exec();} while(0);
+#endif
+
+#ifdef USE_RGB_PIXEL
+#define LED_INIT() do {init_rgb2led_exec();} while(0);
 #endif
 
 #ifndef LED_INIT
@@ -168,7 +173,9 @@ HttpdBuiltInUrl builtInUrls[]={
 
 	{"/websocket/ws.cgi", cgiWebsocket, myWebsocketConnect},
 	{"/websocket/echo.cgi", cgiWebsocket, myEchoWebsocketConnect},
-
+#ifdef USE_RGB_PIXEL
+    {"/bmp", cgi_bmp2led, NULL},
+#endif
 #ifdef  USE_HTTP_CTRL
     {"/rgb", cgi_rgb, NULL},
 #endif
