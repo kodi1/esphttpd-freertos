@@ -96,6 +96,24 @@ void myEchoWebsocketConnect(Websock *ws) {
 	ws->recvCb=myEchoWebsocketRecv;
 }
 
+#ifdef ESPFS_POS
+CgiUploadFlashDef uploadParams={
+	.type=CGIFLASH_TYPE_ESPFS,
+	.fw1Pos=ESPFS_POS,
+	.fw2Pos=0,
+	.fwSize=ESPFS_SIZE,
+};
+#define INCLUDE_FLASH_FNS
+#endif
+#ifdef OTA_FLASH_SIZE_K
+CgiUploadFlashDef uploadParams={
+	.type=CGIFLASH_TYPE_FW,
+	.fw1Pos=0x1000,
+	.fw2Pos=((OTA_FLASH_SIZE_K*1024)/2)+0x1000,
+	.fwSize=((OTA_FLASH_SIZE_K*1024)/2)-0x1000,
+};
+#define INCLUDE_FLASH_FNS
+#endif
 
 /*
 This is the main url->function dispatching data struct.
@@ -115,6 +133,10 @@ HttpdBuiltInUrl builtInUrls[]={
 	{"/index.tpl", cgiEspFsTemplate, tplCounter},
 	{"/led.cgi", cgiLed, NULL},
 	{"/flash/download", cgiReadFlash, NULL},
+#ifdef INCLUDE_FLASH_FNS
+	{"/flash/next", cgiGetFirmwareNext, &uploadParams},
+	{"/flash/upload", cgiUploadFirmware, &uploadParams},
+#endif
 	{"/flash/reboot", cgiRebootFirmware, NULL},
 
 	//Routines to make the /wifi URL and everything beneath it work.

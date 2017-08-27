@@ -16,7 +16,7 @@
 
 static os_timer_t resetBtntimer;
 
-void ioLed(int ena) {
+void ICACHE_FLASH_ATTR ioLed(int ena) {
 	//gpio_output_set is overkill. ToDo: use better mactos
 	if (ena) {
 		gpio_output_set((1<<LEDGPIO), 0, (1<<LEDGPIO), 0);
@@ -25,7 +25,7 @@ void ioLed(int ena) {
 	}
 }
 
-static void resetBtnTimerCb(void *arg) {
+static void ICACHE_FLASH_ATTR resetBtnTimerCb(void *arg) {
 	static int resetCnt=0;
 	if ((GPIO_REG_READ(GPIO_IN_ADDRESS)&(1<<BTNGPIO))==0) {
 		resetCnt++;
@@ -39,7 +39,6 @@ static void resetBtnTimerCb(void *arg) {
 		resetCnt=0;
 	}
 }
-
 
 void ioInit() {
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);
