@@ -40,12 +40,26 @@ static void ICACHE_FLASH_ATTR resetBtnTimerCb(void *arg) {
 	}
 }
 
+#ifdef FREERTOS
+static void ICACHE_FLASH_ATTR wifi_rst (void *arg)
+{
+    do {
+        resetBtnTimerCb(NULL);
+        vTaskDelay(500/portTICK_RATE_MS);
+    } while (1);
+}
+#endif
+
 void ioInit() {
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0);
 	gpio_output_set(0, 0, (1<<LEDGPIO), (1<<BTNGPIO));
-	os_timer_disarm(&resetBtntimer);
-	os_timer_setfn(&resetBtntimer, resetBtnTimerCb, NULL);
-	os_timer_arm(&resetBtntimer, 500, 1);
+#ifdef FREERTOS
+	xTaskCreate(&wifi_rst, "wifireset", 128, NULL, 1, NULL);
+#else
+    os_timer_disarm(&resetBtntimer);
+    os_timer_setfn(&resetBtntimer, resetBtnTimerCb, NULL);
+    os_timer_arm(&resetBtntimer, 500, 1);
+#endif
 }
 
