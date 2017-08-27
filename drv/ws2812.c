@@ -14,7 +14,7 @@ void ICACHE_FLASH_ATTR ws2812_init(void)
 
     //init SPI bus
     spi_init_gpio(SPI_DEV, SPI_CLK_USE_DIV);
-    spi_clock(SPI_DEV, 5, 5); // 3.2Mhz @ 80 Mhz
+    spi_clock(SPI_DEV, 4, 5); // 4Mhz @ 80 Mhz
     spi_tx_byte_order(SPI_DEV, SPI_BYTE_ORDER_HIGH_TO_LOW);
     spi_rx_byte_order(SPI_DEV, SPI_BYTE_ORDER_HIGH_TO_LOW);
 
@@ -24,8 +24,9 @@ void ICACHE_FLASH_ATTR ws2812_init(void)
     DBG_LOG("Exit");
 }
 
-void ws2812_push(void *data, size_t size)
+void IRAM_ATTR ws2812_push(void *data, size_t size)
 {
+    void *nmi_isr;
     uint8   *_d = data;
     uint32  b;
     uint8 bits[] = {
@@ -36,6 +37,30 @@ void ws2812_push(void *data, size_t size)
     };
 
 //    DBG_LOG("Enter");
+    __asm__ __volatile__ (
+          "j function_entry\n"
+
+          ".align 128\n"
+          "vecbase_mod:\n"
+          "nop\n"
+
+          ".align 16\n"
+          "debug_exception_mod:\n"
+          "nop\n"
+
+          ".align 16\n"
+          "nmi_exception_mod:\n"
+          "rfi 3\n"
+
+          "function_entry:\n"
+          "rsr.vecbase %0\n"
+          "movi a2, vecbase_mod\n"
+          "wsr.vecbase a2\n"
+
+          : "=r" (nmi_isr)
+          :
+          : "a2", "memory"
+    );
 
     while (size--) {
         b = (
@@ -44,10 +69,18 @@ void ws2812_push(void *data, size_t size)
                 bits[((*_d) >> 4) & 0x3] << 16 |
                 bits[((*_d) >> 6) & 0x3] << 24
         );
-
         spi_tx32(SPI_DEV, b);
-        _d ++;
+        _d++;
     }
+
+    __asm__ __volatile__ (
+          "wsr.vecbase %0\n"            // restore original vecbase
+          :
+          : "r" (nmi_isr)
+          : "memory"
+    );
+
+    wDev_MacTim1Arm(1);
 
 //    DBG_LOG("Exit");
 }

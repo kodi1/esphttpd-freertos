@@ -121,7 +121,9 @@ EXIT_1:
 static void push_data(void)
 {
     static portBASE_TYPE wake = pdFALSE;
+    vPortEnterCritical();
     ws2812_push(&rgb_data, sizeof(rgb_data));
+    vPortExitCritical();
     xSemaphoreGiveFromISR(sem, &wake);
 }
 
@@ -139,7 +141,7 @@ static void ICACHE_FLASH_ATTR bmp_task (void *arg)
 
     memset(rgb_data, 0x0f, sizeof(rgb_data));
     ws2812_init();
-    hw_timer_arm(50);
+    hw_timer_arm(5);
 
     while (1) {
         data_pixel_t *rcv_data  = NULL;
@@ -180,7 +182,7 @@ static void ICACHE_FLASH_ATTR bmp_task (void *arg)
             }
         }
 
-        hw_timer_arm(1000);
+        hw_timer_arm(5);
 
         pw_down_cnt = 0;
         if (rcv_data && rcv_data->data) {
@@ -208,9 +210,7 @@ static void bmp_task_tst (void *arg)
             memset(rgb_data, 0x00, sizeof(rgb_data));
         }
 
-        taskENTER_CRITICAL();
         ws2812_push(rgb_data, sizeof(rgb_data));
-        taskEXIT_CRITICAL();
 
         vTaskDelay(_ms(300));
         cnt++;
@@ -281,7 +281,7 @@ static void ICACHE_FLASH_ATTR udp_raw_task (void *arg)
 #ifdef PRINT_TIME_DBG
         time = system_get_time();
 #endif
-        if (MAX_DATA_SIZE > recv_len) {
+        if (MAX_DATA_SIZE >= recv_len) {
             raw_data_push(rx_buff);
         } else {
             DBG_LOG("Len: %d from %d", recv_len, MAX_DATA_SIZE);

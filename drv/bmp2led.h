@@ -25,7 +25,7 @@
 
 #define MAX_BMP2LED_DATA    (4)
 #define BMP2LED_WAIT_TIME   (20)    // milliseconds
-#define BMP2LED_POWER_DOWN  (6)   // seconds
+#define BMP2LED_POWER_DOWN  (600)   // seconds
 #define _IDLE_CNT           ((BMP2LED_POWER_DOWN * 1000) / BMP2LED_WAIT_TIME)
 #define _ms(a)              ((a) / portTICK_RATE_MS)
 
