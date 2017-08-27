@@ -35,20 +35,26 @@ some pictures of cats.
 #include "led_exec.h"
 #include "bmp2led.h"
 
-#ifdef  USE_UDP_CTRL
-#define LED_INIT() do {init_listen(6666);} while(0);
+#ifdef USE_UDP_CTRL
+#define _INIT() do {init_listen(6666);} while(0);
 #endif
 
-#ifdef  USE_HTTP_CTRL
-#define LED_INIT() do {init_led_exec();} while(0);
+#ifdef USE_HTTP_CTRL
+#define _INIT() do {init_led_exec();} while(0);
 #endif
 
 #ifdef USE_RGB_PIXEL
-#define LED_INIT() do {init_rgb2led_exec();} while(0);
+#define _INIT() do {init_rgb2led_exec();} while(0);
 #endif
 
-#ifndef LED_INIT
-#error "LED_INIT()"
+#ifdef USE_SENSORS
+#define _DEV_NAME "sensor"
+#define _INIT(a,b) do {init_sensors(a,b);} while (0);
+#else
+#define _DEV_NAME "led"
+#endif
+#ifndef _INIT
+#error "_INIT()"
 #endif
 
 //Function that tells the authentication system what users/passwords live on the system.
@@ -217,24 +223,26 @@ uint32 user_rf_cal_sector_set(void)
 
 //Main routine. Initialize stdout, the I/O, filesystem and the webserver and we're done.
 void user_init(void) {
-    uint8  r[6] , hostname[16];
+    uint8  r[6];
+    static uint8_t hostname[16];
 	uart_div_modify(0, UART_CLK_FREQ / 115200);
 
 	wifi_get_macaddr(STATION_IF, r);
-	snprintf(hostname, sizeof(hostname), "led_%x%x%x", r[3], r[4], r[5]);
-	wifi_station_set_hostname (hostname);
+	snprintf(hostname, sizeof(hostname), "%s_%x%x%x", _DEV_NAME , r[3], r[4], r[5]);
+	wifi_station_set_hostname(hostname);
 
+#ifndef USE_SENSORS
 	ioInit();
 	captdnsInit();
-
 	espFsInit((void*)(webpages_espfs_start));
 	httpdInit(builtInUrls, 80);
+#endif
+
 /*
 	os_timer_disarm(&websockTimer);
 	os_timer_setfn(&websockTimer, websockTimerCb, NULL);
 	os_timer_arm(&websockTimer, 1000, 1);
 */
-	LED_INIT();
-
+	_INIT(builtInUrls, hostname);
 	printf("\nReady\n");
 }

@@ -21,6 +21,8 @@ SPI_SPEED=80
 SPI_MODE=QIO
 SPI_SIZE_MAP=4
 
+_HATOKEN ?= ABCDEF
+_HAHOST ?= localhost
 
 ESPTOOL ?= esptool.py
 ESPPORT ?= /dev/ttyUSB0
@@ -57,7 +59,9 @@ LDDIR = $(SDK_PATH)/ld
 CCFLAGS += -Os
 CCFLAGS += -DOTA_FLASH_SIZE_K=1024
 CCFLAGS += -DDEBUG_MSG
-CCFLAGS += -DUSE_RGB_PIXEL
+CCFLAGS += -DUSE_SENSORS
+CCFLAGS += -DHATOKEN="$(_HATOKEN)"
+CCFLAGS += -DHAHOST="$(_HAHOST)"
 
 TARGET_LDFLAGS =		\
 	-nostdlib		\
@@ -85,10 +89,10 @@ flash: $(GEN_IMAGES) $(TARGET_OUT)
 	$(ESPTOOL) $(ESPTOOL_OPTS) write_flash $(ESPTOOL_FLASHDEF) 0x00000 "$(SDK_PATH)/bin/boot_v1.6.bin" 0x1000 $(BIN_PATH)/upgrade/$(BIN_NAME).bin
 
 blankflash:
-	$(ESPTOOL) $(ESPTOOL_OPTS) write_flash $(ESPTOOL_FLASHDEF) 0x3FE000 "$(SDK_PATH)/bin/blank.bin" \
+	$(ESPTOOL) $(ESPTOOL_OPTS) write_flash $(ESPTOOL_FLASHDEF) 0x00000 "$(SDK_PATH)/bin/boot_v1.6.bin" \
+																0x1000 $(BIN_PATH)/upgrade/$(BIN_NAME).bin \
 																0xFF000 $(SDK_PATH)/bin/esp_init_data_default.bin \
-																0x00000 "$(SDK_PATH)/bin/boot_v1.6.bin" \
-																0x1000 $(BIN_PATH)/upgrade/$(BIN_NAME).bin
+																0x3FE000 "$(SDK_PATH)/bin/blank.bin"
 COMPONENTS_eagle.app.v6 = \
 	user/libuser.a \
 	drv/libdrv.a
@@ -120,6 +124,7 @@ LINKFLAGS_eagle.app.v6 = \
 	-lwebpages-espfs \
 	-lpwm \
 	-ljson \
+	-ldriver \
 	$(DEP_LIBS_eagle.app.v6)					\
 	-Wl,--end-group \
 	-Wl,-Map=mapfile.txt

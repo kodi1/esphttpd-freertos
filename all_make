@@ -1,3 +1,4 @@
+# _HATOKEN=<token> _HAHOST=<hahost> . all_make <host>
 make clean && make -C libesphttpd clean && make APP=1 && \
 make clean && make -C libesphttpd clean && make APP=2 && \
-./wiflash $1 ../upgrade/user1.4096.new.4.bin ../upgrade/user2.4096.new.4.bin
+./wiflash -v $1 ../upgrade/user1.4096.new.4.bin ../upgrade/user2.4096.new.4.bin
