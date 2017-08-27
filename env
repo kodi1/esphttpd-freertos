@@ -1,0 +1,7 @@
+export PROJ_BASE=$(pwd)/..
+export PATH=$PROJ_BASE/esp-open-sdk/xtensa-lx106-elf/bin:$PATH
+export SDK_PATH=$PROJ_BASE/ESP8266_RTOS_SDK/
+export BIN_PATH=$PROJ_BASE
+export USE_OPENSDK=yes
+export FREERTOS=yes
+export COMPILE=gcc
