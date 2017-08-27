@@ -53,7 +53,7 @@ endif # } PDIR
 
 LDDIR = $(SDK_PATH)/ld
 
-CCFLAGS += -Os
+CCFLAGS += -Os -DOTA_FLASH_SIZE_K=1024
 
 TARGET_LDFLAGS =		\
 	-nostdlib		\
