@@ -179,6 +179,6 @@ void user_init(void) {
 	os_timer_setfn(&websockTimer, websockTimerCb, NULL);
 	os_timer_arm(&websockTimer, 1000, 1);
 */
-    led_pwm_init(0);
+    init_listen(6666);
 	printf("\nReady\n");
 }

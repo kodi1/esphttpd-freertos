@@ -99,6 +99,8 @@ LINKFLAGS_eagle.app.v6 = \
     -u call_user_start	\
 	-Wl,-static						\
 	-Wl,--start-group					\
+	-lcirom \
+	-lmirom	\
 	-lminic \
 	-lgcc					\
 	-lhal					\
@@ -114,6 +116,7 @@ LINKFLAGS_eagle.app.v6 = \
 	-lesphttpd \
 	-lwebpages-espfs \
 	-lpwm \
+	-ljson \
 	$(DEP_LIBS_eagle.app.v6)					\
 	-Wl,--end-group \
 	-Wl,-Map=mapfile.txt
