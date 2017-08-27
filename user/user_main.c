@@ -139,7 +139,12 @@ HttpdBuiltInUrl builtInUrls[]={
 
 //Main routine. Initialize stdout, the I/O, filesystem and the webserver and we're done.
 void user_init(void) {
+    uint8  r[6] , hostname[16];
 	uart_div_modify(0, UART_CLK_FREQ / 115200);
+
+	wifi_get_macaddr(STATION_IF, r);
+	snprintf(hostname, sizeof(hostname), "led_%x%x%x", r[3], r[4], r[5]);
+	wifi_station_set_hostname (hostname);
 
 	ioInit();
 	captdnsInit();
