@@ -92,9 +92,9 @@ flash: $(GEN_IMAGES) $(TARGET_OUT)
 
 blankflash:
 	$(ESPTOOL) $(ESPTOOL_OPTS) write_flash $(ESPTOOL_FLASHDEF) 0x00000 "$(SDK_PATH)/bin/boot_v1.6.bin" \
-																0x1000 $(BIN_PATH)/upgrade/$(BIN_NAME).bin \
-																0xFF000 $(SDK_PATH)/bin/esp_init_data_default.bin \
-																0x3FE000 "$(SDK_PATH)/bin/blank.bin"
+								0x1000 $(BIN_PATH)/upgrade/$(BIN_NAME).bin \
+								0x3FC000 $(SDK_PATH)/bin/esp_init_data_default.bin \
+								0x3FE000 "$(SDK_PATH)/bin/blank.bin"
 COMPONENTS_eagle.app.v6 = \
 	user/libuser.a \
 	drv/libdrv.a
