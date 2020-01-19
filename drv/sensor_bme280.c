@@ -56,13 +56,21 @@
 #define _ADC            (3400.0 / 830.0)
 #define ADC_TO_V(r)     (((_ADC * r * 1000) / 1024.0) - 77)
 
-#define MAXLINE 1024
+#define clip(a, b, c)   ((a > b) ? a : ((b > c) ? c : b))
+#define percent(a, b, c) (((b - a) * 100) / (c - a))
+
+#define MAX_BATT (4000)
+#define MIN_BATT (2900)
+
+#define MAXLINE (1024)
+
 char _temp[MAXLINE + 1];
 
 static xSemaphoreHandle xconnect = NULL;
 static xSemaphoreHandle xdetect = NULL;
 static xQueueHandle xdataq = NULL;
 static uint32_t addr = 0;
+static uint8_t channel = 0;
 
 volatile uint32_t sens_detected = 0;
 
@@ -419,6 +427,8 @@ exit_1:
 static void wifi_cb(System_Event_t *e)
 {
     switch (e->event_id) {
+        case EVENT_STAMODE_CONNECTED:
+            channel = e->event_info.connected.channel;
         case EVENT_STAMODE_GOT_IP:
             addr = e->event_info.got_ip.ip.addr;
             xSemaphoreGive(xconnect);
@@ -469,48 +479,47 @@ exit_1:
 
 static inline ICACHE_FLASH_ATTR void _ha_post (
                                                  uint8 const    *name,
-                                                 uint8 const    *type,
-                                                 uint8 const    *units,
-                                                 uint8 const    *icon,
-                                                 float const    result,
+                                                 bme_data_t     *res,
                                                  void           *servin)
 {
+    char saddr[16];
     void *_data_payload;
+    void *_payload;
     void *jspayload = cJSON_CreateObject();
     void *jsattr = cJSON_CreateObject();
 
-    double res = res > 0 ?
-            (int32)((result + 0.005) * 100) / 100.0 :
-            (int32)((result - 0.005) * 100) / 100.0;
+    float batt_p = clip(MIN_BATT, res->vbatt, MAX_BATT);
+    batt_p = percent(MIN_BATT, batt_p, MAX_BATT);
 
-    cJSON_AddItemToObject(jsattr, "attribution", cJSON_CreateString(name));
-    cJSON_AddItemToObject(jsattr, "unit_of_measurement", cJSON_CreateString(units));
-    cJSON_AddItemToObject(jsattr, "icon", cJSON_CreateString(icon));
+    cJSON_AddItemToObject(jspayload, "topic", cJSON_CreateString(name));
+    cJSON_AddItemToObject(jspayload, "retain", cJSON_CreateBool(0));
 
-    snprintf(_temp,
-                    MAXLINE,
-                    "%s_%s",
-                    type,
-                    name);
+    cJSON_AddItemToObject(jsattr, "temperature", cJSON_CreateNumber(res->temperature));
+    cJSON_AddItemToObject(jsattr, "batt_v", cJSON_CreateNumber(res->vbatt));
+    cJSON_AddItemToObject(jsattr, "batt_p", cJSON_CreateNumber(batt_p));
+    cJSON_AddItemToObject(jsattr, "pressure", cJSON_CreateNumber(res->pressure));
+    cJSON_AddItemToObject(jsattr, "humidity", cJSON_CreateNumber(res->humidity));
+    cJSON_AddItemToObject(jsattr, "rssi", cJSON_CreateNumber(wifi_station_get_rssi()));
+    cJSON_AddItemToObject(jsattr, "addr", cJSON_CreateString(ipaddr_ntoa_r((void *)&addr, saddr, sizeof(saddr))));
+    cJSON_AddItemToObject(jsattr, "channel", cJSON_CreateNumber(channel));
 
-    cJSON_AddItemToObject(jsattr, "friendly_name", cJSON_CreateString(_temp));
+    cJSON_Minify(jsattr);
+    _payload = cJSON_PrintUnformatted(jsattr);
+    cJSON_Delete(jsattr);
 
-    cJSON_AddItemToObject(jspayload, "attributes", jsattr);
-    cJSON_AddItemToObject(jspayload, "state", cJSON_CreateNumber(res));
+    cJSON_AddItemToObject(jspayload, "payload", cJSON_CreateString(_payload));
+
     cJSON_Minify(jspayload);
-
     _data_payload = cJSON_PrintUnformatted(jspayload);
     cJSON_Delete(jspayload);
 
     snprintf(_temp,
                 MAXLINE,
-                "POST /api/states/sensor.%s_%s HTTP/1.0\r\n"
+                "POST /api/services/mqtt/publish HTTP/1.0\r\n"
                 "Authorization: Bearer %s\r\n"
                 "Content-Type: application/json\r\n"
                 "Content-length: %d\r\n\r\n"
                 "%s",
-                name,
-                type,
                 STR(HATOKEN),
                 strlen(_data_payload),
                 _data_payload
@@ -518,6 +527,7 @@ static inline ICACHE_FLASH_ATTR void _ha_post (
 
     _send(servin, _temp, MAXLINE);
     free(_data_payload);
+    free(_payload);
 }
 
 static void ICACHE_FLASH_ATTR task_send (void *arg)
@@ -572,41 +582,8 @@ static void ICACHE_FLASH_ATTR task_send (void *arg)
             goto exit_1;
         }
 
-        _ha_post(
-                    arg,
-                    "battery",
-                    "V",
-                    "mdi:gauge",
-                    (res.vbatt / 1000.0),
-                    &servin
-                );
+        _ha_post(arg, &res, &servin);
 
-        _ha_post(
-                    arg,
-                    "temperature",
-                    "°C",
-                    "mdi:thermometer",
-                    res.temperature,
-                    &servin
-                );
-
-        _ha_post(
-                    arg,
-                    "pressure",
-                    "hPa",
-                    "mdi:gauge",
-                    res.pressure,
-                    &servin
-                );
-
-        _ha_post(
-                    arg,
-                    "humidity",
-                    "%",
-                    "mdi:water-percent",
-                    res.humidity,
-                    &servin
-                );
     } while (dont_sleep());
 
 exit_1:
